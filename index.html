@@ -1,1 +1,69 @@
-index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaeAsistente</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #avatar-container { width: 250px; height: 250px; position: relative; margin-bottom: 20px; }
+        #avatar-container img { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; object-fit: contain; }
+        #img-reposo-abiertos { display: block; }
+        .btn { padding: 15px 30px; background: #6200ee; color: white; border: none; border-radius: 25px; font-size: 1.1rem; cursor: pointer; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        .btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <div id="avatar-container">
+        <!-- REEMPLAZA LOS LINKS AQUÍ -->
+        <img id="img-reposo-abiertos" src="https://i.ibb.co/HpnNTw8H/19-sin-t-tulo-20260508010017.png">
+        <img id="img-reposo-cerrados" src="https://i.ibb.co/Lz8S5FX1/19-sin-t-tulo-20260508005934.png">
+        <img id="img-hablando-abiertos" src="https://i.ibb.co/5WsbCWGg/19-sin-t-tulo-20260508010236.png">
+        <img id="img-hablando-cerrados" src="https://i.ibb.co/TD8ZKBhb/19-sin-t-tulo-20260508010100.png">
+    </div>
+
+    <a href="https://poe.com/invite/a467f7f681f4421e8ec57b98a8681d63" target="_blank" class="btn" onclick="iniciarHabla()">¡Hablar con mi Asistente!</a>
+
+    <audio id="typingSound" src="https://www.soundjay.com/communication/typewriter-key-1.mp3"></audio>
+
+    <script>
+        const imgA = document.getElementById('img-reposo-abiertos');
+        const imgB = document.getElementById('img-reposo-cerrados');
+        const imgC = document.getElementById('img-hablando-abiertos');
+        const imgD = document.getElementById('img-hablando-cerrados');
+        const sonido = document.getElementById('typingSound');
+        let hablando = false;
+
+        function ocultarTodas() { [imgA, imgB, imgC, imgD].forEach(i => i.style.display = 'none'); }
+
+        // Parpadeo constante
+        setInterval(() => {
+            if (!hablando) {
+                ocultarTodas(); imgB.style.display = 'block';
+                setTimeout(() => { if(!hablando) { ocultarTodas(); imgA.style.display = 'block'; } }, 200);
+            }
+        }, 4000);
+
+        function iniciarHabla() {
+            hablando = true;
+            sonido.play();
+            let ciclo = 0;
+            const anim = setInterval(() => {
+                ocultarTodas();
+                if (ciclo % 2 === 0) imgC.style.display = 'block';
+                else imgD.style.display = 'block';
+                ciclo++;
+                if (ciclo > 20) { // Duración de la animación (20 pasos)
+                    clearInterval(anim);
+                    hablando = false;
+                    ocultarTodas();
+                    imgA.style.display = 'block';
+                    sonido.pause();
+                    sonido.currentTime = 0;
+                }
+            }, 150);
+        }
+    </script>
+</body>
+</html>
