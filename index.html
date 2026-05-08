@@ -178,29 +178,55 @@
             "comer": "Me encantaría comer una Baya Atrezo digital ahora mismo."
          };
 
-        function hablarConIA() {
-            const input = document.getElementById('userInput');
-            const textoOriginal = input.value;
-            const textoLimpio = textoOriginal.trim().toLowerCase();
-            if (!textoOriginal) return;
+        async function hablarConIA() {
+    const input = document.getElementById('userInput');
+    const textoOriginal = input.value;
+    const textoLimpio = textoOriginal.trim().toLowerCase();
+    if (!textoOriginal) return;
 
-            chatBox.innerHTML += `<div class="msg user">${textoOriginal}</div>`;
-            input.value = "";
-            
-            let respuestaIA = "¡Glub! No sé qué es eso, pero suena interesante.";
-            for (let clave in respuestas) {
-                if (textoLimpio.includes(clave)) {
-                    respuestaIA = respuestas[clave];
-                    break;
-                }
-            }
-
-            setTimeout(() => {
-                chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
-                animarBoca(respuestaIA.length * 60);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
+    // 1. Mostrar tu mensaje
+    chatBox.innerHTML += `<div class="msg user">${textoOriginal}</div>`;
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+    
+    // 2. Revisar si tenemos una respuesta local primero
+    let respuestaIA = null;
+    for (let clave in respuestas) {
+        if (textoLimpio.includes(clave)) {
+            respuestaIA = respuestas[clave];
+            break;
         }
+    }
+
+    // 3. Si NO tenemos respuesta local, saltamos a INTERNET (Wikipedia)
+    if (!respuestaIA) {
+        animarBoca(2000); // Vaporeon dice que está buscando
+        chatBox.innerHTML += `<div class="msg ai">¡Glub! No tengo eso en memoria, déjame buscarlo en mis burbujas...</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            // Buscamos en Wikipedia (API abierta)
+            const urlWiki = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(textoOriginal)}`;
+            const res = await fetch(urlWiki);
+            const data = await res.json();
+
+            if (data.extract) {
+                respuestaIA = data.extract; // El resumen de Wikipedia
+            } else {
+                respuestaIA = "Lo siento, mis burbujas no encontraron nada sobre eso. ¿Me lo explicas tú?";
+            }
+        } catch (e) {
+            respuestaIA = "¡Glub! Se me fue el internet bajo el agua. Intenta otra cosa.";
+        }
+    }
+
+    // 4. Mostrar la respuesta final (sea local o de internet)
+    setTimeout(() => {
+        chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
+        animarBoca(respuestaIA.length * 50); // Animación proporcional al texto
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }, 1000);
+}
 
         document.getElementById('userInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') hablarConIA(); });
     </script>
