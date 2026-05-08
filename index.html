@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vaporeon Virtual</title>
+    <title>Vaporeon Virtual Pro</title>
     <style>
         :root {
             --primary: #00d4ff;
@@ -11,19 +11,18 @@
             --chat-bg: #112240;
         }
 
-        /* Reset total para evitar errores en móvil */
         * { box-sizing: border-box; }
 
         body, html { 
             margin: 0; padding: 0; height: 100%; width: 100%;
             background: var(--bg); color: white; font-family: sans-serif;
-            overflow: hidden; position: fixed; /* Evita que la pantalla rebote */
+            overflow: hidden; position: fixed;
         }
 
-        /* Fondo de Burbujas - Capa de atrás */
+        /* Fondo de Burbujas */
         .ocean {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            z-index: 1; /* Al fondo */
+            z-index: 1;
             background: linear-gradient(180deg, #0a192f 0%, #001f3f 100%);
         }
 
@@ -38,22 +37,21 @@
             100% { transform: translateY(-120vh); opacity: 0; }
         }
 
-        /* Contenedor Principal - Capa de adelante */
+        /* Estructura Principal */
         .main-container {
-            position: relative; z-index: 10; /* Adelante de las burbujas */
+            position: relative; z-index: 10;
             display: flex; flex-direction: column; height: 100vh; width: 100%;
         }
 
-        /* Avatar */
         #header { 
             height: 30vh; min-height: 150px;
             display: flex; align-items: center; justify-content: center;
         }
-        #avatar-container { width: 140px; height: 140px; position: relative; }
+
+        #avatar-container { width: 140px; height: 140px; position: relative; filter: drop-shadow(0 0 10px var(--primary)); }
         #avatar-container img { width: 100%; height: 100%; position: absolute; display: none; object-fit: contain; }
         #img-A { display: block; }
 
-        /* Chat */
         #chat-box { 
             flex: 1; overflow-y: auto; padding: 15px;
             display: flex; flex-direction: column; gap: 10px;
@@ -61,33 +59,26 @@
             border-radius: 25px 25px 0 0;
             backdrop-filter: blur(5px);
             margin: 0 5px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
         }
 
-        .msg { padding: 10px 15px; border-radius: 18px; max-width: 80%; font-size: 15px; }
-        .user { align-self: flex-end; background: var(--primary); color: #000; }
-        .ai { align-self: flex-start; background: #233554; color: #ccd6f6; }
+        .msg { padding: 10px 15px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.4; }
+        .user { align-self: flex-end; background: var(--primary); color: #000; font-weight: bold; }
+        .ai { align-self: flex-start; background: #233554; color: #ccd6f6; border: 1px solid #30363d; }
 
-        /* INPUT AREA - Ajuste crítico */
         #input-area { 
-            height: 70px; /* Tamaño fijo para que no desaparezca */
-            padding: 10px 15px; 
-            display: flex; 
-            gap: 10px; 
-            background: #112240;
-            z-index: 20;
-            border-top: 1px solid var(--primary);
+            height: 70px; padding: 10px 15px; display: flex; gap: 10px; 
+            background: #112240; z-index: 20; border-top: 1px solid var(--primary);
         }
         
         input { 
             flex: 1; padding: 0 15px; border-radius: 25px; border: none;
             background: #0a192f; color: white; outline: none; font-size: 16px;
-            height: 45px;
         }
         
         button { 
             background: var(--primary); color: #000; border: none; 
-            padding: 0 20px; border-radius: 25px; font-weight: bold;
-            height: 45px;
+            padding: 0 20px; border-radius: 25px; font-weight: bold; cursor: pointer;
         }
     </style>
 </head>
@@ -108,7 +99,7 @@
         <div id="chat-box"></div>
 
         <div id="input-area">
-            <input type="text" id="userInput" placeholder="Escribe aquí..." autocomplete="off">
+            <input type="text" id="userInput" placeholder="Traduce: hola / clima / ¿Qué es...?" autocomplete="off">
             <button onclick="hablarConIA()">Enviar</button>
         </div>
     </div>
@@ -124,9 +115,9 @@
         const sound = document.getElementById('typingSound');
         let animando = false;
 
-        // Crear burbujas
+        // --- BURBUJAS ---
         const ocean = document.getElementById('ocean');
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 15; i++) {
             const b = document.createElement('div');
             b.className = 'bubble';
             const size = Math.random() * 25 + 10 + 'px';
@@ -136,8 +127,19 @@
             ocean.appendChild(b);
         }
 
+        // --- VOZ ---
+        function decir(texto) {
+            const textoLimpio = texto.replace(/<[^>]*>?/gm, '');
+            const mensaje = new SpeechSynthesisUtterance(textoLimpio);
+            mensaje.lang = 'es-ES'; 
+            mensaje.rate = 1.1; 
+            mensaje.pitch = 1.2; 
+            window.speechSynthesis.speak(mensaje);
+        }
+
         function ocultar() { [imgA, imgB, imgC, imgD].forEach(i => i.style.display = 'none'); }
 
+        // Parpadeo
         setInterval(() => {
             if (!animando) {
                 ocultar(); imgB.style.display = 'block';
@@ -163,78 +165,88 @@
             }, duracion);
         }
 
-        const respuestas = {
-            "hola": "¡Hola! Glub glub. ¿Cómo va tu día hoy?",
-            "holi": "¡Holi! Qué alegría verte por aquí.",
-            "quien eres": "Soy tu asistente Vaporeon, una criatura de código y burbujas.",
-            "como estas": "¡Súper bien! Nadando por el servidor de Vercel muy feliz.",
-            "te quiero": "¡Aww! Yo también te quiero mucho. Gracias por programarme.",
-            "pokemon": "¡Los tipo agua somos los más elegantes! ¿No crees?",
-            "chiste": "¿Qué hace un Vaporeon en el gimnasio? ¡Agua-ntar el peso! Jajaja.",
-            "clima": "Aquí en el internet siempre está fresco. ¡Ideal para un tipo agua!",
-            "adios": "¡Adiós! No olvides volver pronto para jugar.",
-            "help": "Puedes decirme 'hola', 'chiste', 'quién eres' o preguntarme cómo estoy.",
-            "creador": "Fui creado por una ingeniera súper talentosa (tú).",
-            "comer": "Me encantaría comer una Baya Atrezo digital ahora mismo."
-         };
+        const respuestasLocales = {
+            "hola": "¡Hola! Glub glub. ¿Cómo va tu día?",
+            "quien eres": "Soy tu asistente Vaporeon. ¡Listo para ayudarte!",
+            "te quiero": "¡Y yo a ti! Gracias por cuidarme tanto.",
+            "como estas": "Muy feliz nadando en tu computadora.",
+            "pokemon": "¡Los tipo agua somos los más fuertes!"
+        };
 
         async function hablarConIA() {
-    const input = document.getElementById('userInput');
-    const textoOriginal = input.value;
-    const textoLimpio = textoOriginal.trim().toLowerCase();
-    if (!textoOriginal) return;
+            const input = document.getElementById('userInput');
+            const textoOriginal = input.value.trim();
+            const textoLimpio = textoOriginal.toLowerCase();
+            if (!textoOriginal) return;
 
-    chatBox.innerHTML += `<div class="msg user">${textoOriginal}</div>`;
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
-    
-    let respuestaIA = null;
-    for (let clave in respuestas) {
-        if (textoLimpio.includes(clave)) {
-            respuestaIA = respuestas[clave];
-            break;
-        }
-    }
+            chatBox.innerHTML += `<div class="msg user">${textoOriginal}</div>`;
+            input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            let respuestaIA = null;
 
-    if (!respuestaIA) {
-        animarBoca(2000);
-        chatBox.innerHTML += `<div class="msg ai">¡Glub! Déjame buscar eso en el océano de información...</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
+            // 1. COMANDO TRADUCIR
+            if (textoLimpio.startsWith("traduce:")) {
+                const palabra = textoLimpio.replace("traduce:", "").trim();
+                animarBoca(1500);
+                try {
+                    const res = await fetch(`https://api.mymemory.translated.net/get?q=${palabra}&langpair=es|en`);
+                    const data = await res.json();
+                    respuestaIA = `En inglés se dice: ${data.responseData.translatedText}`;
+                } catch (e) { respuestaIA = "Me dio un calambre en la lengua y no pude traducir."; }
+            }
 
-        try {
-            // PASO 1: Buscar el título más relevante en Wikipedia
-            const searchUrl = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(textoOriginal)}&format=json&origin=*`;
-            const searchRes = await fetch(searchUrl);
-            const searchData = await searchRes.json();
+            // 2. COMANDO CLIMA
+            else if (textoLimpio.includes("clima") || textoLimpio.includes("tiempo")) {
+                animarBoca(2000);
+                try {
+                    const res = await fetch('https://wttr.in/?format=j1');
+                    const data = await res.json();
+                    const temp = data.current_condition[0].temp_C;
+                    const desc = data.current_condition[0].lang_es[0].value;
+                    respuestaIA = `Ahora mismo hay ${temp}°C y está ${desc}. ¡Glub!`;
+                } catch (e) { respuestaIA = "No puedo ver el cielo desde el fondo del mar."; }
+            }
 
-            if (searchData.query.search.length > 0) {
-                const mejorTitulo = searchData.query.search[0].title;
-                
-                // PASO 2: Traer el resumen de ese título
-                const summaryUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(mejorTitulo)}`;
-                const summaryRes = await fetch(summaryUrl);
-                const summaryData = await summaryRes.json();
-
-                if (summaryData.extract) {
-                    respuestaIA = "He encontrado que ${mejorTitulo} es: ${summaryData.extract}";
+            // 3. RESPUESTAS LOCALES
+            if (!respuestaIA) {
+                for (let clave in respuestasLocales) {
+                    if (textoLimpio.includes(clave)) {
+                        respuestaIA = respuestasLocales[clave];
+                        break;
+                    }
                 }
             }
-            
+
+            // 4. WIKIPEDIA (Plan Final)
             if (!respuestaIA) {
-                respuestaIA = "Mis burbujas no encontraron nada exacto. ¿Puedes intentar con otra palabra?";
+                animarBoca(2000);
+                chatBox.innerHTML += `<div class="msg ai">Buscando en mis burbujas...</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                try {
+                    const searchUrl = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(textoOriginal)}&format=json&origin=*`;
+                    const searchRes = await fetch(searchUrl);
+                    const searchData = await searchRes.json();
+                    if (searchData.query.search.length > 0) {
+                        const mejorTitulo = searchData.query.search[0].title;
+                        const summaryUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(mejorTitulo)}`;
+                        const summaryRes = await fetch(summaryUrl);
+                        const summaryData = await summaryRes.json();
+                        respuestaIA = summaryData.extract || "No encontré un resumen claro.";
+                    }
+                } catch (e) { respuestaIA = "Se me revolvió el agua y no encontré nada."; }
             }
 
-        } catch (e) {
-            respuestaIA = "¡Glub! Hubo un remolino en la conexión. Intenta de nuevo.";
-        }
-    }
+            if (!respuestaIA) respuestaIA = "¡Glub! No sé qué es eso. ¿Me enseñas?";
 
-    setTimeout(() => {
-        chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
-        animarBoca(respuestaIA.length * 50);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }, 1000);
-}
+            // MOSTRAR Y HABLAR
+            setTimeout(() => {
+                chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
+                decir(respuestaIA);
+                animarBoca(respuestaIA.length * 60);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 800);
+        }
 
         document.getElementById('userInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') hablarConIA(); });
     </script>
