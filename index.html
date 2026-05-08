@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Asistente Vaporeon</title>
+    <title>Mi Vaporeon IA</title>
     <style>
         body { 
             background: #121212; 
             color: white; 
-            font-family: sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
@@ -16,14 +16,14 @@
             overflow: hidden;
         }
         
-        /* Área del Avatar */
+        /* Contenedor del Avatar */
         #header { 
             height: 40%; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             background: #1a1a1a;
-            border-bottom: 2px solid #00bbff;
+            border-bottom: 3px solid #00bbff;
         }
         #avatar-container { 
             width: 180px; 
@@ -37,22 +37,23 @@
             display: none; 
             object-fit: contain; 
         }
-        #img-A { display: block; } /* Mostrar el primero por defecto */
+        #img-A { display: block; } /* Imagen inicial */
 
-        /* Área del Chat */
+        /* Caja de Chat */
         #chat-box { 
             flex-grow: 1; 
             overflow-y: auto; 
-            padding: 15px; 
+            padding: 20px; 
             display: flex; 
             flex-direction: column; 
-            gap: 10px; 
+            gap: 12px; 
+            background: #121212;
         }
-        .msg { padding: 10px 15px; border-radius: 18px; max-width: 80%; line-height: 1.4; }
-        .user { align-self: flex-end; background: #007bff; color: white; }
-        .ai { align-self: flex-start; background: #333; color: white; }
+        .msg { padding: 12px 16px; border-radius: 20px; max-width: 80%; line-height: 1.4; font-size: 15px; }
+        .user { align-self: flex-end; background: #007bff; color: white; border-bottom-right-radius: 2px; }
+        .ai { align-self: flex-start; background: #333; color: white; border-bottom-left-radius: 2px; }
 
-        /* Input */
+        /* Área de escritura */
         #input-area { 
             padding: 15px; 
             display: flex; 
@@ -62,22 +63,24 @@
         }
         input { 
             flex-grow: 1; 
-            padding: 12px; 
+            padding: 12px 18px; 
             border-radius: 25px; 
             border: 1px solid #444; 
-            background: #222; 
+            background: #252525; 
             color: white; 
             outline: none;
         }
         button { 
             background: #00bbff; 
-            color: black; 
+            color: #000; 
             border: none; 
-            padding: 10px 20px; 
+            padding: 10px 22px; 
             border-radius: 25px; 
             font-weight: bold; 
             cursor: pointer;
+            transition: 0.2s;
         }
+        button:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
@@ -91,52 +94,49 @@
         </div>
     </div>
 
-    <div id="chat-box"></div>
+    <div id="chat-box" id="chatBox"></div>
 
     <div id="input-area">
-        <input type="text" id="userInput" placeholder="Escribe un mensaje...">
+        <input type="text" id="userInput" placeholder="Dile algo a Vaporeon...">
         <button onclick="hablarConIA()">Enviar</button>
     </div>
 
     <audio id="typingSound" src="https://www.soundjay.com/communication/typewriter-key-1.mp3"></audio>
 
     <script>
-        // ⚠️ PEGA TU TOKEN AQUÍ ABAJO ⚠️
-        const HF_TOKEN = "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"; 
-
-        const imgA = document.getElementById('img-A'); // Abiertos / Cerrada
-        const imgB = document.getElementById('img-B'); // Cerrados / Cerrada
-        const imgC = document.getElementById('img-C'); // Abiertos / Abierta
-        const imgD = document.getElementById('img-D'); // Cerrados / Abierta
+        const imgA = document.getElementById('img-A');
+        const imgB = document.getElementById('img-B');
+        const imgC = document.getElementById('img-C');
+        const imgD = document.getElementById('img-D');
         const sound = document.getElementById('typingSound');
         const chatBox = document.getElementById('chat-box');
-        let estaHablando = false;
+        let animando = false;
 
         function ocultar() { [imgA, imgB, imgC, imgD].forEach(i => i.style.display = 'none'); }
 
-        // Parpadeo automático cuando no habla
+        // Parpadeo automático (Ojos abiertos -> Ojos cerrados)
         setInterval(() => {
-            if (!estaHablando) {
+            if (!animando) {
                 ocultar(); imgB.style.display = 'block';
-                setTimeout(() => { if(!estaHablando){ ocultar(); imgA.style.display = 'block'; } }, 200);
+                setTimeout(() => { if(!animando){ ocultar(); imgA.style.display = 'block'; } }, 200);
             }
         }, 4000);
 
-        function animarVaporeon(duracion) {
-            estaHablando = true;
+        function animarBoca(duracion) {
+            animando = true;
             sound.play();
-            let frame = 0;
+            let ciclo = 0;
             const intervalo = setInterval(() => {
                 ocultar();
-                // Alterna entre Boca Abierta (Ojos Abiertos e Ojos Cerrados)
-                if (frame % 2 === 0) imgC.style.display = 'block';
+                // Alterna entre Boca Abierta (Ojos abiertos / Ojos cerrados)
+                if (ciclo % 2 === 0) imgC.style.display = 'block';
                 else imgD.style.display = 'block';
-                frame++;
+                ciclo++;
             }, 150);
 
             setTimeout(() => {
                 clearInterval(intervalo);
-                estaHablando = false;
+                animando = false;
                 ocultar();
                 imgA.style.display = 'block';
                 sound.pause();
@@ -144,50 +144,39 @@
             }, duracion);
         }
 
-        function hablarConIA() {
-    const input = document.getElementById('userInput');
-    const texto = input.value;
-    if (!texto) return;
+        async function hablarConIA() {
+            const input = document.getElementById('userInput');
+            const texto = input.value.trim();
+            if (!texto) return;
 
-    chatBox.innerHTML += `<div class="msg user">${texto}</div>`;
-    input.value = "";
-    
-    // El Vaporeon responde algo fijo al instante
-    setTimeout(() => {
-        const respuesta = "¡Pura vaporeonada! No me rendiré si tú no te rindes.";
-        chatBox.innerHTML += `<div class="msg ai">${respuesta}</div>`;
-        animarVaporeon(3000); // Esto probará si tus imágenes cambian
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }, 500);
-}
+            // Mostrar mensaje del usuario
+            chatBox.innerHTML += `<div class="msg user">${texto}</div>`;
+            input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            animarBoca(1500); // Mueve la boca mientras piensa
+
             try {
-                const response = await fetch("https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${HF_TOKEN}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ inputs: texto })
-                });
-
+                // API gratuita de SimSimi (Habla español y no necesita Token)
+                const response = await fetch(`https://api.simsimi.vn/v2/simsimi?text=${encodeURIComponent(texto)}&lc=es`);
                 const data = await response.json();
                 
-                // Blenderbot suele responder en 'generated_text'
-                const respuestaIA = data.generated_text || (data[0] && data[0].generated_text) || "¡Hola! Estoy listo.";
+                const respuestaIA = data.result || "¡Vaporeon! (No sé qué decir)";
 
+                // Mostrar respuesta
                 chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
                 
-                // Mueve la boca proporcionalmente a la respuesta
-                animarVaporeon(respuestaIA.length * 60);
+                // Animar boca según el largo del texto
+                animarBoca(respuestaIA.length * 60);
                 
             } catch (error) {
-                chatBox.innerHTML += `<div class="msg ai">Ocurrió un error en la conexión.</div>`;
+                chatBox.innerHTML += `<div class="msg ai">¡Glub! Hubo un error de conexión.</div>`;
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Enviar con la tecla Enter
-        document.getElementById('userInput').addEventListener('keypress', function (e) {
+        // Enviar con Enter
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') hablarConIA();
         });
     </script>
