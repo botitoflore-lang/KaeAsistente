@@ -117,8 +117,8 @@
             animarBoca(respuestaIA.length * 60); 
         }
     } catch (error) {
-        chatBox.innerHTML += `<div class="msg ai">Error de red: ${error.message}</div>`;
-    }
+    chatBox.innerHTML += `<div class="msg ai">Error detallado: ${JSON.stringify(error)}</div>`;
+        }
     chatBox.scrollTop = chatBox.scrollHeight;
 }
         
