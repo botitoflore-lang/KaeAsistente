@@ -216,7 +216,7 @@
                 const summaryData = await summaryRes.json();
 
                 if (summaryData.extract) {
-                    respuestaIA = "Encontré algo sobre <b style='color: #00d4ff;'>${mejorTitulo}</b>: ${summaryData.extract}";
+                    respuestaIA = "He encontrado que ${mejorTitulo} es: ${summaryData.extract}";
                 }
             }
             
