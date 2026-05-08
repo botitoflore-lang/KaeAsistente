@@ -184,12 +184,10 @@
     const textoLimpio = textoOriginal.trim().toLowerCase();
     if (!textoOriginal) return;
 
-    // 1. Mostrar tu mensaje
     chatBox.innerHTML += `<div class="msg user">${textoOriginal}</div>`;
     input.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
     
-    // 2. Revisar si tenemos una respuesta local primero
     let respuestaIA = null;
     for (let clave in respuestas) {
         if (textoLimpio.includes(clave)) {
@@ -198,32 +196,42 @@
         }
     }
 
-    // 3. Si NO tenemos respuesta local, saltamos a INTERNET (Wikipedia)
     if (!respuestaIA) {
-        animarBoca(2000); // Vaporeon dice que está buscando
-        chatBox.innerHTML += `<div class="msg ai">¡Glub! No tengo eso en memoria, déjame buscarlo en mis burbujas...</div>`;
+        animarBoca(2000);
+        chatBox.innerHTML += `<div class="msg ai">¡Glub! Déjame buscar eso en el océano de información...</div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
 
         try {
-            // Buscamos en Wikipedia (API abierta)
-            const urlWiki = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(textoOriginal)}`;
-            const res = await fetch(urlWiki);
-            const data = await res.json();
+            // PASO 1: Buscar el título más relevante en Wikipedia
+            const searchUrl = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(textoOriginal)}&format=json&origin=*`;
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
 
-            if (data.extract) {
-                respuestaIA = data.extract; // El resumen de Wikipedia
-            } else {
-                respuestaIA = "Lo siento, mis burbujas no encontraron nada sobre eso. ¿Me lo explicas tú?";
+            if (searchData.query.search.length > 0) {
+                const mejorTitulo = searchData.query.search[0].title;
+                
+                // PASO 2: Traer el resumen de ese título
+                const summaryUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(mejorTitulo)}`;
+                const summaryRes = await fetch(summaryUrl);
+                const summaryData = await summaryRes.json();
+
+                if (summaryData.extract) {
+                    respuestaIA = `He encontrado que **${mejorTitulo}** es: ${summaryData.extract}`;
+                }
             }
+            
+            if (!respuestaIA) {
+                respuestaIA = "Mis burbujas no encontraron nada exacto. ¿Puedes intentar con otra palabra?";
+            }
+
         } catch (e) {
-            respuestaIA = "¡Glub! Se me fue el internet bajo el agua. Intenta otra cosa.";
+            respuestaIA = "¡Glub! Hubo un remolino en la conexión. Intenta de nuevo.";
         }
     }
 
-    // 4. Mostrar la respuesta final (sea local o de internet)
     setTimeout(() => {
         chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
-        animarBoca(respuestaIA.length * 50); // Animación proporcional al texto
+        animarBoca(respuestaIA.length * 50);
         chatBox.scrollTop = chatBox.scrollHeight;
     }, 1000);
 }
