@@ -3,27 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KaeAsistente</title>
+    <title>Mi Asistente IA</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        #avatar-container { width: 250px; height: 250px; position: relative; margin-bottom: 20px; }
-        #avatar-container img { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; object-fit: contain; }
+        /* Fondo y estructura principal */
+        body { background: #1a1a1a; color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Área del Avatar */
+        #top-bar { height: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #252525; border-bottom: 2px solid #6200ee; }
+        #avatar-container { width: 120px; height: 120px; position: relative; }
+        #avatar-container img { width: 100%; height: 100%; position: absolute; display: none; object-fit: contain; }
         #img-reposo-abiertos { display: block; }
-        .btn { padding: 15px 30px; background: #6200ee; color: white; border: none; border-radius: 25px; font-size: 1.1rem; cursor: pointer; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
-        .btn:active { transform: scale(0.95); }
+
+        /* Área del Chat */
+        #chat-container { height: 70%; width: 100%; border: none; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Botón invisible sobre el chat para detectar toques */
+        #overlay { position: absolute; bottom: 0; width: 100%; height: 100px; z-index: 10; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="avatar-container">
-        <!-- REEMPLAZA LOS LINKS AQUÍ -->
-        <img id="img-reposo-abiertos" src="https://i.ibb.co/HpnNTw8H/19-sin-t-tulo-20260508010017.png">
-        <img id="img-reposo-cerrados" src="https://i.ibb.co/Lz8S5FX1/19-sin-t-tulo-20260508005934.png">
-        <img id="img-hablando-abiertos" src="https://i.ibb.co/5WsbCWGg/19-sin-t-tulo-20260508010236.png">
-        <img id="img-hablando-cerrados" src="https://i.ibb.co/TD8ZKBhb/19-sin-t-tulo-20260508010100.png">
+    <div id="top-bar">
+        <div id="avatar-container">
+            <!-- 1. CAMBIA ESTOS LINKS POR LOS DE TUS IMÁGENES -->
+            <img id="img-reposo-abiertos" src="https://i.ibb.co/HpnNTw8H/19-sin-t-tulo-20260508010017.png">
+            <img id="img-reposo-cerrados" src="https://i.ibb.co/Lz8S5FX1/19-sin-t-tulo-20260508005934.png">
+            <img id="img-hablando-abiertos" src="https://i.ibb.co/5WsbCWGg/19-sin-t-tulo-20260508010236.png">
+            <img id="img-hablando-cerrados" src="https://i.ibb.co/TD8ZKBhb/19-sin-t-tulo-20260508010100.png">
+        </div>
+        <small style="margin-top:5px; opacity:0.7;">Asistente en línea</small>
     </div>
 
-    <a href="https://poe.com/invite/a467f7f681f4421e8ec57b98a8681d63" target="_blank" class="btn" onclick="iniciarHabla()">¡Hablar con mi Asistente!</a>
+    <!-- 2. CAMBIA ESTE LINK POR TU BOT DE POE -->
+    <div id="chat-container">
+        <iframe src="https://poe.com/KaeAsistente" id="chatFrame"></iframe>
+    </div>
+
+    <!-- Capa para detectar cuando tocas para escribir -->
+    <div id="overlay" onclick="iniciarAnimacion()"></div>
 
     <audio id="typingSound" src="https://www.soundjay.com/communication/typewriter-key-1.mp3"></audio>
 
@@ -33,36 +51,44 @@
         const imgC = document.getElementById('img-hablando-abiertos');
         const imgD = document.getElementById('img-hablando-cerrados');
         const sonido = document.getElementById('typingSound');
-        let hablando = false;
+        let animando = false;
 
-        function ocultarTodas() { [imgA, imgB, imgC, imgD].forEach(i => i.style.display = 'none'); }
+        function ocultar() { [imgA, imgB, imgC, imgD].forEach(i => i.style.display = 'none'); }
 
-        // Parpadeo constante
+        // Parpadeo automático
         setInterval(() => {
-            if (!hablando) {
-                ocultarTodas(); imgB.style.display = 'block';
-                setTimeout(() => { if(!hablando) { ocultarTodas(); imgA.style.display = 'block'; } }, 200);
+            if (!animando) {
+                ocultar(); imgB.style.display = 'block';
+                setTimeout(() => { if(!animando){ ocultar(); imgA.style.display = 'block'; } }, 200);
             }
-        }, 4000);
+        }, 3500);
 
-        function iniciarHabla() {
-            hablando = true;
+        // Al tocar el área del chat, el muñeco "habla"
+        function iniciarAnimacion() {
+            if (animando) return;
+            animando = true;
             sonido.play();
-            let ciclo = 0;
-            const anim = setInterval(() => {
-                ocultarTodas();
-                if (ciclo % 2 === 0) imgC.style.display = 'block';
+            
+            let veces = 0;
+            const intervalo = setInterval(() => {
+                ocultar();
+                if (veces % 2 === 0) imgC.style.display = 'block';
                 else imgD.style.display = 'block';
-                ciclo++;
-                if (ciclo > 20) { // Duración de la animación (20 pasos)
-                    clearInterval(anim);
-                    hablando = false;
-                    ocultarTodas();
+                veces++;
+                
+                if (veces > 15) { // Duración de la animación
+                    clearInterval(intervalo);
+                    animando = false;
+                    ocultar();
                     imgA.style.display = 'block';
-                    sonido.pause();
-                    sonido.currentTime = 0;
                 }
             }, 150);
+
+            // Quitamos el overlay momentáneamente para que puedan clickear el chat real
+            document.getElementById('overlay').style.display = 'none';
+            setTimeout(() => {
+                document.getElementById('overlay').style.display = 'block';
+            }, 5000);
         }
     </script>
 </body>
