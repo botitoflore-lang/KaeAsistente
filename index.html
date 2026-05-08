@@ -3,92 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Asistente IA</title>
+    <title>Mi IA Privada</title>
     <style>
-        /* Fondo y estructura principal */
-        body { background: #1a1a1a; color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { background: #121212; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         
-        /* Área del Avatar */
-        #top-bar { height: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #252525; border-bottom: 2px solid #6200ee; }
-        #avatar-container { width: 120px; height: 120px; position: relative; }
+        /* Avatar */
+        #header { height: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1e1e1e; }
+        #avatar-container { width: 150px; height: 150px; position: relative; }
         #avatar-container img { width: 100%; height: 100%; position: absolute; display: none; object-fit: contain; }
-        #img-reposo-abiertos { display: block; }
+        #img-A { display: block; } /* Reposo */
 
-        /* Área del Chat */
-        #chat-container { height: 70%; width: 100%; border: none; }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* Chat */
+        #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: #121212; }
+        .msg { padding: 10px; border-radius: 10px; max-width: 80%; word-wrap: break-word; }
+        .user { align-self: flex-end; background: #6200ee; }
+        .ai { align-self: flex-start; background: #333; }
 
-        /* Botón invisible sobre el chat para detectar toques */
-        #overlay { position: absolute; bottom: 0; width: 100%; height: 100px; z-index: 10; cursor: pointer; }
+        /* Input */
+        #input-area { padding: 15px; display: flex; gap: 10px; background: #1e1e1e; }
+        input { flex-grow: 1; padding: 10px; border-radius: 20px; border: none; outline: none; }
+        button { background: #6200ee; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="top-bar">
+    <div id="header">
         <div id="avatar-container">
-            <!-- 1. CAMBIA ESTOS LINKS POR LOS DE TUS IMÁGENES -->
-            <img id="img-reposo-abiertos" src="https://i.ibb.co/HpnNTw8H/19-sin-t-tulo-20260508010017.png">
-            <img id="img-reposo-cerrados" src="https://i.ibb.co/Lz8S5FX1/19-sin-t-tulo-20260508005934.png">
-            <img id="img-hablando-abiertos" src="https://i.ibb.co/5WsbCWGg/19-sin-t-tulo-20260508010236.png">
-            <img id="img-hablando-cerrados" src="https://i.ibb.co/TD8ZKBhb/19-sin-t-tulo-20260508010100.png">
+            <img id="img-A" src="https://i.ibb.co/HpnNTw8H/19-sin-t-tulo-20260508010017.png">
+            <img id="img-B" src="https://i.ibb.co/Lz8S5FX1/19-sin-t-tulo-20260508005934.png">
+            <img id="img-C" src="https://i.ibb.co/5WsbCWGg/19-sin-t-tulo-20260508010236.png">
+            <img id="img-D" src="https://i.ibb.co/TD8ZKBhb/19-sin-t-tulo-20260508010100.png">
         </div>
-        <small style="margin-top:5px; opacity:0.7;">Asistente en línea</small>
     </div>
 
-    <!-- 2. CAMBIA ESTE LINK POR TU BOT DE POE -->
-    <div id="chat-container">
-        <iframe src="https://poe.com/KaeAsistente" id="chatFrame"></iframe>
-    </div>
+    <div id="chat-box" id="chatBox"></div>
 
-    <!-- Capa para detectar cuando tocas para escribir -->
-    <div id="overlay" onclick="iniciarAnimacion()"></div>
+    <div id="input-area">
+        <input type="text" id="userInput" placeholder="Escribe algo...">
+        <button onclick="hablarConIA()">Enviar</button>
+    </div>
 
     <audio id="typingSound" src="https://www.soundjay.com/communication/typewriter-key-1.mp3"></audio>
 
     <script>
-        const imgA = document.getElementById('img-reposo-abiertos');
-        const imgB = document.getElementById('img-reposo-cerrados');
-        const imgC = document.getElementById('img-hablando-abiertos');
-        const imgD = document.getElementById('img-hablando-cerrados');
-        const sonido = document.getElementById('typingSound');
+        const API_KEY = "AIzaSyCy3fzVLstJy56PPI2aa6D9UClzTfG50_Y"; // <--- PEGA TU LLAVE AQUÍ
+        
+        const imgA = document.getElementById('img-A');
+        const imgB = document.getElementById('img-B');
+        const imgC = document.getElementById('img-C');
+        const imgD = document.getElementById('img-D');
+        const sound = document.getElementById('typingSound');
+        const chatBox = document.getElementById('chat-box');
         let animando = false;
 
         function ocultar() { [imgA, imgB, imgC, imgD].forEach(i => i.style.display = 'none'); }
 
-        // Parpadeo automático
-        setInterval(() => {
-            if (!animando) {
-                ocultar(); imgB.style.display = 'block';
-                setTimeout(() => { if(!animando){ ocultar(); imgA.style.display = 'block'; } }, 200);
-            }
-        }, 3500);
-
-        // Al tocar el área del chat, el muñeco "habla"
-        function iniciarAnimacion() {
-            if (animando) return;
+        // Animación de hablar
+        function animarBoca(duracion) {
             animando = true;
-            sonido.play();
-            
-            let veces = 0;
-            const intervalo = setInterval(() => {
+            sound.play();
+            let ciclo = 0;
+            const interval = setInterval(() => {
                 ocultar();
-                if (veces % 2 === 0) imgC.style.display = 'block';
+                if (ciclo % 2 === 0) imgC.style.display = 'block';
                 else imgD.style.display = 'block';
-                veces++;
-                
-                if (veces > 15) { // Duración de la animación
-                    clearInterval(intervalo);
-                    animando = false;
-                    ocultar();
-                    imgA.style.display = 'block';
-                }
+                ciclo++;
             }, 150);
-
-            // Quitamos el overlay momentáneamente para que puedan clickear el chat real
-            document.getElementById('overlay').style.display = 'none';
+            
             setTimeout(() => {
-                document.getElementById('overlay').style.display = 'block';
-            }, 5000);
+                clearInterval(interval);
+                animando = false;
+                ocultar();
+                imgA.style.display = 'block';
+                sound.pause();
+                sound.currentTime = 0;
+            }, duracion);
+        }
+
+        async function hablarConIA() {
+            const input = document.getElementById('userInput');
+            const texto = input.value;
+            if (!texto) return;
+
+            // Mostrar mensaje del usuario
+            chatBox.innerHTML += `<div class="msg user">${texto}</div>`;
+            input.value = "";
+            animarBoca(2000); // Empieza a mover la boca mientras piensa
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: texto }] }] })
+                });
+
+                const data = await response.json();
+                const respuestaIA = data.candidates[0].content.parts[0].text;
+                
+                // Mostrar respuesta y animar boca según el largo del texto
+                chatBox.innerHTML += `<div class="msg ai">${respuestaIA}</div>`;
+                animarBoca(respuestaIA.length * 50); // Mueve la boca proporcionalmente
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                chatBox.innerHTML += `<div class="msg ai">Error: No pude conectar :(</div>`;
+            }
         }
     </script>
 </body>
