@@ -94,13 +94,17 @@
 
     try {
         // La línea de abajo es la clave. Asegúrate de que empiece y termine con `
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 contents: [{
-                    parts: [{ text: texto }]
+                    parts: [{
+                        text: texto
+                    }]
                 }]
             })
         });
